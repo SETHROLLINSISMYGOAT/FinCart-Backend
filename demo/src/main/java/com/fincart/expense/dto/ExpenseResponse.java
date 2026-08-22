@@ -10,6 +10,15 @@ public class ExpenseResponse {
     private String category;
     private LocalDate expenseDate;
     public ExpenseResponse() {}
+    public ExpenseResponse(Long id, String description, String title, Double amount, String category, LocalDate expenseDate) {
+        this.id = id;
+        this.description = description;
+        this.title = title;
+        this.amount = amount;
+        this.category = category;
+        this.expenseDate = expenseDate;
+
+    }
 
     public LocalDate getExpenseDate() {
         return expenseDate;
@@ -59,15 +68,7 @@ public class ExpenseResponse {
         this.id = id;
     }
 
-    public ExpenseResponse(Long id, String description, String title, Double amount, String category, LocalDate expenseDate) {
-        this.id = id;
-        this.description = description;
-        this.title = title;
-        this.amount = amount;
-        this.category = category;
-        this.expenseDate = expenseDate;
 
-    }
 
 
 }

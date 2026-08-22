@@ -3,27 +3,65 @@ package com.fincart.expense.entity;
 import com.fincart.user.entity.User;
 import jakarta.persistence.*;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Entity
-@Table(name="expenses")
+@Table(name = "expenses")
 public class Expense {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     @Column(nullable = false)
     private String title;
+
     @Column(nullable = false)
     private Double amount;
+
     @Column(nullable = false)
-    private String  category;
+    private String category;
 
     private String description;
+
     @Column(nullable = false)
-    private LocalDateTime date;
+    private LocalDate expenseDate;
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id",nullable = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    public Expense() {
+    }
+
+    public Expense(Long id, String title, Double amount,
+                   String category, String description,
+                   LocalDate expenseDate, User user) {
+
+        this.id = id;
+        this.title = title;
+        this.amount = amount;
+        this.category = category;
+        this.description = description;
+        this.expenseDate = expenseDate;
+        this.user = user;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
 
     public Double getAmount() {
         return amount;
@@ -49,12 +87,12 @@ public class Expense {
         this.description = description;
     }
 
-    public LocalDateTime getDate() {
-        return date;
+    public LocalDate getExpenseDate() {
+        return expenseDate;
     }
 
-    public void setDate(LocalDateTime date) {
-        this.date = date;
+    public void setExpenseDate(LocalDate expenseDate) {
+        this.expenseDate = expenseDate;
     }
 
     public User getUser() {
@@ -64,33 +102,4 @@ public class Expense {
     public void setUser(User user) {
         this.user = user;
     }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Expense(Long id, String title, Double amount, String category, String description, LocalDateTime date, User user) {
-        this.id = id;
-        this.title = title;
-        this.amount = amount;
-        this.category = category;
-        this.description = description;
-        this.date = date;
-        this.user = user;
-
-    }
-
-
 }
