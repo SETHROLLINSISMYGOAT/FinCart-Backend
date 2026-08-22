@@ -18,9 +18,9 @@ public class GlobalExceptionHandler {
 
         ErrorResponse response =
                 new ErrorResponse(
-                        HttpStatus.NOT_FOUND.value(),
-                        ex.getMessage()
-                );
+                        ex.getMessage(),
+                        HttpStatus.NOT_FOUND.value()
+                                );
 
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
@@ -33,9 +33,9 @@ public class GlobalExceptionHandler {
 
         ErrorResponse response =
                 new ErrorResponse(
-                        HttpStatus.CONFLICT.value(),
-                        ex.getMessage()
-                );
+                        ex.getMessage(),
+                        HttpStatus.CONFLICT.value()
+                                );
 
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
@@ -57,9 +57,9 @@ public class GlobalExceptionHandler {
 
         ErrorResponse response =
                 new ErrorResponse(
-                        HttpStatus.BAD_REQUEST.value(),
-                        message
-                );
+                        message,
+                        HttpStatus.BAD_REQUEST.value()
+                                );
 
         return ResponseEntity
                 .badRequest()

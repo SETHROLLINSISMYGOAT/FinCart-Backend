@@ -8,13 +8,17 @@ import com.fincart.user.dto.UserResponse;
 import com.fincart.user.entity.User;
 import com.fincart.user.repository.UserRepository;
 import jdk.jshell.spi.ExecutionControl;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
-
+@Service
 public class UserService {
-    private UserRepository userRepository;
-    public void setUserRepository(UserRepository userRepository) {
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    public UserService(UserRepository userRepository,PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
     public UserResponse createUser(CreateUserRequest request) {
         if(userRepository.existsByEmail(request.getEmail())) {
@@ -22,7 +26,7 @@ public class UserService {
         }
         User user = new User();
         user.setEmail(request.getEmail());
-        user.setPassword(request.getPassword());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setUsername(request.getName());
         user.setRole("User");
         User updatedUser =

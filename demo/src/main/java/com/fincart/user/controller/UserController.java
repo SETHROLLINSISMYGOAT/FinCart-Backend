@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Registered
+@RestController
 @RequestMapping("/api/users")
 public class UserController {
     private final UserService userService;
@@ -32,12 +32,12 @@ public class UserController {
     public ResponseEntity<UserResponse> getUser(@PathVariable Long id) {
         return ResponseEntity.ok(userService.getUserById(id));
     }
-    @PutMapping
+    @PutMapping("/{id}")
     public ResponseEntity<UserResponse> updateUser(@PathVariable Long id,@Valid @RequestBody UpdateUserRequest request) {
         UserResponse userResponse = userService.updateUser(id, request);
         return ResponseEntity.ok(userResponse);
     }
-    @DeleteMapping
+    @DeleteMapping("/{id}")
     public ResponseEntity<UserResponse> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
