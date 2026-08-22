@@ -12,7 +12,8 @@ public class CreateExpenseRequest {
     private Double amount;
     @NotBlank
     private String category;
-    private String Description;
+    private String description;
+
 
     public @NotBlank String getTitle() {
         return title;
@@ -46,6 +47,6 @@ public class CreateExpenseRequest {
         this.description = description;
     }
 
-    private String description;
+
 
 }
