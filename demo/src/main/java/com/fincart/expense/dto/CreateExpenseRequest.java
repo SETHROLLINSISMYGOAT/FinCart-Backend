@@ -12,6 +12,7 @@ public class CreateExpenseRequest {
     private Double amount;
     @NotBlank
     private String category;
+    private String Description;
 
     public @NotBlank String getTitle() {
         return title;
