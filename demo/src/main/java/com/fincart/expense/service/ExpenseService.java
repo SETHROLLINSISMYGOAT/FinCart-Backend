@@ -2,17 +2,16 @@ package com.fincart.expense.service;
 
 import com.fincart.expense.dto.CreateExpenseRequest;
 import com.fincart.expense.dto.ExpenseResponse;
-import com.fincart.expense.dto.UpdateExpenseRequest;
 import com.fincart.expense.entity.Expense;
 import com.fincart.expense.repository.ExpenseRepository;
 import com.fincart.user.entity.User;
 import com.fincart.user.repository.UserRepository;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-
 
 @Service
 public class ExpenseService {
@@ -30,9 +29,9 @@ public class ExpenseService {
 
     public ExpenseResponse createExpense(
             CreateExpenseRequest request,
-            Long userId) {
+            String email) {
 
-        User user = userRepository.findById(userId)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() ->
                         new RuntimeException("User not found"));
 
@@ -51,28 +50,30 @@ public class ExpenseService {
     }
 
     public Page<ExpenseResponse> getExpenses(
-            Long userId,
+            String email,
             String category,
             Pageable pageable) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new RuntimeException("User not found"));
 
         Page<Expense> expenses;
 
         if (category != null && !category.isBlank()) {
 
-            expenses =
-                    expenseRepository
-                            .findByUserIdAndCategory(
-                                    userId,
-                                    category,
-                                    pageable);
+            expenses = expenseRepository
+                    .findByUserIdAndCategory(
+                            user.getId(),
+                            category,
+                            pageable);
 
         } else {
 
-            expenses =
-                    expenseRepository
-                            .findByUserId(
-                                    userId,
-                                    pageable);
+            expenses = expenseRepository
+                    .findByUserId(
+                            user.getId(),
+                            pageable);
         }
 
         return expenses.map(this::mapToResponse);
@@ -80,28 +81,38 @@ public class ExpenseService {
 
     public ExpenseResponse getExpenseById(
             Long id,
-            Long userId) {
+            String email) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new RuntimeException("User not found"));
 
         Expense expense = expenseRepository
                 .findById(id)
                 .orElseThrow(() ->
                         new RuntimeException("Expense not found"));
 
-        if (!expense.getUser().getId().equals(userId)) {
+        if (!expense.getUser().getId().equals(user.getId())) {
             throw new RuntimeException("Access denied");
         }
 
         return mapToResponse(expense);
     }
 
-    public void deleteExpense(Long id, Long userId) {
+    public void deleteExpense(
+            Long id,
+            String email) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new RuntimeException("User not found"));
 
         Expense expense = expenseRepository
                 .findById(id)
                 .orElseThrow(() ->
                         new RuntimeException("Expense not found"));
 
-        if (!expense.getUser().getId().equals(userId)) {
+        if (!expense.getUser().getId().equals(user.getId())) {
             throw new RuntimeException("Access denied");
         }
 
@@ -116,7 +127,6 @@ public class ExpenseService {
                 expense.getTitle(),
                 expense.getAmount(),
                 expense.getCategory(),
-
                 expense.getExpenseDate()
         );
     }

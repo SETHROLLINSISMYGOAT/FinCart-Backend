@@ -3,13 +3,20 @@ package com.fincart.expense.controller;
 import com.fincart.expense.dto.CreateExpenseRequest;
 import com.fincart.expense.dto.ExpenseResponse;
 import com.fincart.expense.service.ExpenseService;
+
 import jakarta.validation.Valid;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -26,10 +33,15 @@ public class ExpenseController {
     public ResponseEntity<ExpenseResponse> createExpense(
             @Valid @RequestBody CreateExpenseRequest request) {
 
-        Long userId = 1L; // temporary for Day 3
+        Authentication authentication =
+                SecurityContextHolder
+                        .getContext()
+                        .getAuthentication();
+
+        String email = authentication.getName();
 
         ExpenseResponse response =
-                expenseService.createExpense(request, userId);
+                expenseService.createExpense(request, email);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -61,11 +73,16 @@ public class ExpenseController {
         Pageable pageable =
                 PageRequest.of(page, size, sort);
 
-        Long userId = 1L; // temporary for Day 3
+        Authentication authentication =
+                SecurityContextHolder
+                        .getContext()
+                        .getAuthentication();
+
+        String email = authentication.getName();
 
         return ResponseEntity.ok(
                 expenseService.getExpenses(
-                        userId,
+                        email,
                         category,
                         pageable
                 )
@@ -76,10 +93,15 @@ public class ExpenseController {
     public ResponseEntity<ExpenseResponse> getExpense(
             @PathVariable Long id) {
 
-        Long userId = 1L;
+        Authentication authentication =
+                SecurityContextHolder
+                        .getContext()
+                        .getAuthentication();
+
+        String email = authentication.getName();
 
         return ResponseEntity.ok(
-                expenseService.getExpenseById(id, userId)
+                expenseService.getExpenseById(id, email)
         );
     }
 
@@ -87,9 +109,14 @@ public class ExpenseController {
     public ResponseEntity<Void> deleteExpense(
             @PathVariable Long id) {
 
-        Long userId = 1L;
+        Authentication authentication =
+                SecurityContextHolder
+                        .getContext()
+                        .getAuthentication();
 
-        expenseService.deleteExpense(id, userId);
+        String email = authentication.getName();
+
+        expenseService.deleteExpense(id, email);
 
         return ResponseEntity.noContent().build();
     }

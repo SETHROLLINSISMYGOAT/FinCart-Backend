@@ -42,6 +42,7 @@ public class JwtAuthenticationFilter
 
         String authHeader =
                 request.getHeader("Authorization");
+        System.out.println("AUTH HEADER = " + authHeader);
 
         if (authHeader == null ||
                 !authHeader.startsWith("Bearer ")) {
@@ -52,6 +53,8 @@ public class JwtAuthenticationFilter
 
         String token =
                 authHeader.substring(7);
+
+        System.out.println("JWT VALID = " + jwtService.isTokenValid(token));
 
         if (!jwtService.isTokenValid(token)) {
 
