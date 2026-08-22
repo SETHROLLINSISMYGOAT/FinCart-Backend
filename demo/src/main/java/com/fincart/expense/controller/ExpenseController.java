@@ -2,6 +2,8 @@ package com.fincart.expense.controller;
 
 import com.fincart.expense.dto.CreateExpenseRequest;
 import com.fincart.expense.dto.ExpenseResponse;
+import com.fincart.expense.dto.UpdateExpenseRequest;
+import com.fincart.expense.entity.Expense;
 import com.fincart.expense.service.ExpenseService;
 
 import jakarta.validation.Valid;
@@ -121,5 +123,15 @@ public class ExpenseController {
         expenseService.deleteExpense(id, email);
 
         return ResponseEntity.noContent().build();
+    }
+    @PutMapping("/{id}")
+    public ResponseEntity<ExpenseResponse> updateExpense(@PathVariable Long id,@Valid @RequestBody UpdateExpenseRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        ExpenseResponse expenseResponse = expenseService.updateExpense(id,request,email);
+        return ResponseEntity.ok(expenseResponse);
+
+
+
     }
 }

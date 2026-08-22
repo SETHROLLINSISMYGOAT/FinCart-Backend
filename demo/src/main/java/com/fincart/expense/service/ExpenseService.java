@@ -2,6 +2,7 @@ package com.fincart.expense.service;
 
 import com.fincart.expense.dto.CreateExpenseRequest;
 import com.fincart.expense.dto.ExpenseResponse;
+import com.fincart.expense.dto.UpdateExpenseRequest;
 import com.fincart.expense.entity.Expense;
 import com.fincart.expense.repository.ExpenseRepository;
 import com.fincart.user.entity.User;
@@ -118,6 +119,24 @@ public class ExpenseService {
 
         expenseRepository.delete(expense);
     }
+    public ExpenseResponse updateExpense(Long id, UpdateExpenseRequest request, String email) {
+        User user = userRepository.findByEmail(email).orElseThrow(()-> new RuntimeException("User not found"));
+        Expense expense = expenseRepository.findById(id).orElseThrow(()-> new RuntimeException("Expense not found"));
+        if(!expense.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("Access denied");
+        }
+        expense.setTitle(request.getTitle());
+        expense.setAmount(request.getAmount());
+        expense.setCategory(request.getCategory());
+        expense.setDescription(request.getDescription());
+
+        Expense updated =
+                expenseRepository.save(expense);
+
+        return mapToResponse(updated);
+
+
+    }
 
     private ExpenseResponse mapToResponse(Expense expense) {
 
@@ -130,4 +149,5 @@ public class ExpenseService {
                 expense.getExpenseDate()
         );
     }
+
 }

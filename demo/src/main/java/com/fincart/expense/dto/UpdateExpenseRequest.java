@@ -12,6 +12,7 @@ public class UpdateExpenseRequest {
     private Double amount;
     @NotBlank
     private String category;
+    private String description;
 
     public @NotBlank String getTitle() {
         return title;
@@ -45,5 +46,5 @@ public class UpdateExpenseRequest {
         this.description = description;
     }
 
-    private String description;
+
 }
