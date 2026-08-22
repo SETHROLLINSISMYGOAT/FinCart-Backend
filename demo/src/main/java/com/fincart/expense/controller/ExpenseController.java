@@ -39,6 +39,8 @@ public class ExpenseController {
                         .getAuthentication();
 
         String email = authentication.getName();
+        System.out.println("🔥 EXPENSE CONTROLLER REACHED");
+        System.out.println("EMAIL = " + authentication.getName());
 
         ExpenseResponse response =
                 expenseService.createExpense(request, email);
