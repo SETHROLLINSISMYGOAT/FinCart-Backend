@@ -68,16 +68,10 @@ public class User {
     public void setId(Long id) {
         this.id = id;
     }
-
-    public User(Long id, String username, String email, String password, String role, LocalDateTime createdAt) {
-        this.id = id;
-        this.username = username;
-        this.email = email;
-        this.password = password;
-        this.role = role;
-        this.createdAt = createdAt;
-
+    public User() {
     }
+
+
     @PrePersist
     public void prePersist() {
         createdAt = LocalDateTime.now();
