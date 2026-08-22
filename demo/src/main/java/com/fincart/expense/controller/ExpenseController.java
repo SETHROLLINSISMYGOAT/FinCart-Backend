@@ -6,6 +6,7 @@ import com.fincart.expense.dto.UpdateExpenseRequest;
 import com.fincart.expense.entity.Expense;
 import com.fincart.expense.service.ExpenseService;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 
 import org.springframework.data.domain.Page;
@@ -30,7 +31,7 @@ public class ExpenseController {
     public ExpenseController(ExpenseService expenseService) {
         this.expenseService = expenseService;
     }
-
+    @Operation(summary = "Create a new expense")
     @PostMapping
     public ResponseEntity<ExpenseResponse> createExpense(
             @Valid @RequestBody CreateExpenseRequest request) {
@@ -51,7 +52,7 @@ public class ExpenseController {
                 .status(HttpStatus.CREATED)
                 .body(response);
     }
-
+    @Operation(summary = "Get user's expenses")
     @GetMapping
     public ResponseEntity<Page<ExpenseResponse>> getExpenses(
 
@@ -92,6 +93,7 @@ public class ExpenseController {
                 )
         );
     }
+    @Operation(summary = "Get expense by ID")
 
     @GetMapping("/{id}")
     public ResponseEntity<ExpenseResponse> getExpense(
@@ -108,6 +110,7 @@ public class ExpenseController {
                 expenseService.getExpenseById(id, email)
         );
     }
+    @Operation(summary = "Delete expense")
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteExpense(
