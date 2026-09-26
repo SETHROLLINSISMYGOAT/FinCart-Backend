@@ -1,5 +1,8 @@
 package com.fincart.expense.service;
 
+import com.fincart.common.exception.BadRequestException;
+import com.fincart.common.exception.ConflictException;
+import com.fincart.common.exception.ResourceNotFoundException;
 import com.fincart.expense.dto.CreateExpenseRequest;
 import com.fincart.expense.dto.ExpenseResponse;
 import com.fincart.expense.dto.UpdateExpenseRequest;
@@ -10,144 +13,158 @@ import com.fincart.user.repository.UserRepository;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
+import java.util.Objects;
 
 @Service
 public class ExpenseService {
 
-    private final ExpenseRepository expenseRepository;
-    private final UserRepository userRepository;
+    private final ExpenseRepository expenses;
+    private final UserRepository users;
 
     public ExpenseService(
-            ExpenseRepository expenseRepository,
-            UserRepository userRepository) {
-
-        this.expenseRepository = expenseRepository;
-        this.userRepository = userRepository;
+            ExpenseRepository expenses,
+            UserRepository users) {
+        this.expenses = expenses;
+        this.users = users;
     }
 
-    public ExpenseResponse createExpense(
+    @Transactional
+    public ExpenseResponse create(
             CreateExpenseRequest request,
-            String email) {
+            String authenticatedEmail) {
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() ->
-                        new RuntimeException("User not found"));
+        User owner = requireUser(authenticatedEmail);
 
         Expense expense = new Expense();
+        expense.setTitle(request.title().trim());
+        expense.setAmount(request.amount());
+        expense.setCategory(request.category().trim());
+        expense.setDescription(request.description());
+        expense.setExpenseDate(request.expenseDate());
+        expense.setUser(owner);
 
-        expense.setTitle(request.getTitle());
-        expense.setAmount(request.getAmount());
-        expense.setCategory(request.getCategory());
-        expense.setDescription(request.getDescription());
-        expense.setExpenseDate(LocalDate.now());
-        expense.setUser(user);
-
-        Expense saved = expenseRepository.save(expense);
-
-        return mapToResponse(saved);
+        Expense saved = expenses.save(expense);
+        return toResponse(saved);
     }
 
-    public Page<ExpenseResponse> getExpenses(
-            String email,
+    @Transactional(readOnly = true)
+    public ExpenseResponse getOne(
+            Long expenseId,
+            String authenticatedEmail) {
+
+        User owner = requireUser(authenticatedEmail);
+
+        Expense expense = expenses
+                .findByIdAndUserId(expenseId, owner.getId())
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Expense not found")
+                );
+
+        return toResponse(expense);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ExpenseResponse> list(
+            String authenticatedEmail,
             String category,
             Pageable pageable) {
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() ->
-                        new RuntimeException("User not found"));
+        User owner = requireUser(authenticatedEmail);
 
-        Page<Expense> expenses;
+        Page<Expense> page;
 
-        if (category != null && !category.isBlank()) {
-
-            expenses = expenseRepository
-                    .findByUserIdAndCategory(
-                            user.getId(),
-                            category,
-                            pageable);
-
+        if (category == null || category.isBlank()) {
+            page = expenses.findByUserId(owner.getId(), pageable);
         } else {
-
-            expenses = expenseRepository
-                    .findByUserId(
-                            user.getId(),
-                            pageable);
+            page = expenses.findByUserIdAndCategory(
+                    owner.getId(),
+                    category.trim(),
+                    pageable
+            );
         }
 
-        return expenses.map(this::mapToResponse);
+        return page.map(this::toResponse);
     }
 
-    public ExpenseResponse getExpenseById(
-            Long id,
-            String email) {
+    @Transactional
+    public ExpenseResponse update(
+            Long expenseId,
+            UpdateExpenseRequest request,
+            String authenticatedEmail) {
 
-        User user = userRepository.findByEmail(email)
+        User owner = requireUser(authenticatedEmail);
+
+        Expense expense = expenses
+                .findByIdAndUserId(expenseId, owner.getId())
                 .orElseThrow(() ->
-                        new RuntimeException("User not found"));
+                        new ResourceNotFoundException("Expense not found")
+                );
 
-        Expense expense = expenseRepository
-                .findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException("Expense not found"));
-
-        if (!expense.getUser().getId().equals(user.getId())) {
-            throw new RuntimeException("Access denied");
+        if (!Objects.equals(
+                expense.getVersion(),
+                request.version())) {
+            throw new ConflictException(
+                    "Expense changed since you loaded it. Refresh and try again."
+            );
         }
 
-        return mapToResponse(expense);
-    }
+        expense.setTitle(request.title().trim());
+        expense.setAmount(request.amount());
+        expense.setCategory(request.category().trim());
+        expense.setDescription(request.description());
+        expense.setExpenseDate(request.expenseDate());
 
-    public void deleteExpense(
-            Long id,
-            String email) {
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() ->
-                        new RuntimeException("User not found"));
-
-        Expense expense = expenseRepository
-                .findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException("Expense not found"));
-
-        if (!expense.getUser().getId().equals(user.getId())) {
-            throw new RuntimeException("Access denied");
+        try {
+            expenses.flush();
+        } catch (ObjectOptimisticLockingFailureException ex) {
+            throw new ConflictException(
+                    "Expense changed since you loaded it. Refresh and try again."
+            );
         }
 
-        expenseRepository.delete(expense);
-    }
-    public ExpenseResponse updateExpense(Long id, UpdateExpenseRequest request, String email) {
-        User user = userRepository.findByEmail(email).orElseThrow(()-> new RuntimeException("User not found"));
-        Expense expense = expenseRepository.findById(id).orElseThrow(()-> new RuntimeException("Expense not found"));
-        if(!expense.getUser().getId().equals(user.getId())) {
-            throw new RuntimeException("Access denied");
-        }
-        expense.setTitle(request.getTitle());
-        expense.setAmount(request.getAmount());
-        expense.setCategory(request.getCategory());
-        expense.setDescription(request.getDescription());
-
-        Expense updated =
-                expenseRepository.save(expense);
-
-        return mapToResponse(updated);
-
-
+        return toResponse(expense);
     }
 
-    private ExpenseResponse mapToResponse(Expense expense) {
+    @Transactional
+    public void delete(
+            Long expenseId,
+            String authenticatedEmail) {
 
+        User owner = requireUser(authenticatedEmail);
+
+        Expense expense = expenses
+                .findByIdAndUserId(expenseId, owner.getId())
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Expense not found")
+                );
+
+        expenses.delete(expense);
+    }
+
+    private User requireUser(String email) {
+        return users.findByEmail(email)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Authenticated user not found"
+                        )
+                );
+    }
+
+    private ExpenseResponse toResponse(Expense expense) {
         return new ExpenseResponse(
                 expense.getId(),
-                expense.getDescription(),
                 expense.getTitle(),
                 expense.getAmount(),
                 expense.getCategory(),
-                expense.getExpenseDate()
+                expense.getDescription(),
+                expense.getExpenseDate(),
+                expense.getCreatedAt(),
+                expense.getVersion()
         );
     }
-
 }
