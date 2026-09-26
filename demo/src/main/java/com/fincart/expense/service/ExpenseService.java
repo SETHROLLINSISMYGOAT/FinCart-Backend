@@ -1,6 +1,5 @@
 package com.fincart.expense.service;
 
-import com.fincart.common.exception.BadRequestException;
 import com.fincart.common.exception.ConflictException;
 import com.fincart.common.exception.ResourceNotFoundException;
 import com.fincart.expense.dto.CreateExpenseRequest;

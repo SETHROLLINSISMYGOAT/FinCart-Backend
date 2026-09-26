@@ -1,93 +1,47 @@
 package com.fincart.user.service;
 
-import com.fincart.common.exception.DuplicateResourceException;
 import com.fincart.common.exception.ResourceNotFoundException;
-import com.fincart.user.dto.CreateUserRequest;
 import com.fincart.user.dto.UpdateUserRequest;
 import com.fincart.user.dto.UserResponse;
 import com.fincart.user.entity.User;
 import com.fincart.user.repository.UserRepository;
-import jdk.jshell.spi.ExecutionControl;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 @Service
 public class UserService {
+
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-    public UserService(UserRepository userRepository,PasswordEncoder passwordEncoder) {
+
+    public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
     }
-    public UserResponse createUser(CreateUserRequest request) {
-        if(userRepository.existsByEmail(request.getEmail())) {
-            throw new DuplicateResourceException("Email already exists");
-        }
-        User user = new User();
-        user.setEmail(request.getEmail());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setUsername(request.getName());
-        user.setRole("User");
-        User updatedUser =
-                userRepository.save(user);
 
-        return toResponse(updatedUser);
-
-    }
-    public List<UserResponse> getAllUsers() {
-
-        return userRepository.findAll()
-                .stream()
-                .map(this::toResponse)
-                .toList();
-    }
-    public UserResponse getUserById(Long id) {
-        User user = userRepository.findById(id).orElseThrow(()->
-                new ResourceNotFoundException(
-                        "User with id " + id + " not found"
-                ));
-        return toResponse(user);
-
-    }
-    public UserResponse updateUser(
-            Long id,
-            UpdateUserRequest request) {
-
-        User user = userRepository.findById(id)
+    @Transactional(readOnly = true)
+    public UserResponse getMe(String authenticatedEmail) {
+        User user = userRepository.findByEmail(authenticatedEmail)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "User not found with id: " + id
-                        )
-                );
+                        new ResourceNotFoundException("User not found"));
 
-        if (!user.getEmail().equals(request.getEmail())
-                && userRepository.existsByEmail(
-                request.getEmail())) {
-
-            throw new DuplicateResourceException(
-                    "Email already exists"
-            );
-        }
-
-        user.setUsername(request.getName());
-        user.setEmail(request.getEmail());
-
-        User updatedUser =
-                userRepository.save(user);
-
-        return toResponse(updatedUser);
+        return toResponse(user);
     }
-    public void deleteUser(Long id) {
-        if(!userRepository.existsById(id)) {
-            throw new ResourceNotFoundException(
-                    "User with id " + id + " not found"
-            );
-        }
-        userRepository.deleteById(id);
+
+    @Transactional
+    public UserResponse updateMe(
+            String authenticatedEmail,
+            UpdateUserRequest request
+    ) {
+        User user = userRepository.findByEmail(authenticatedEmail)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User not found"));
+
+        user.setUsername(request.getName().trim());
+
+
+        return toResponse(user);
     }
+
     private UserResponse toResponse(User user) {
-
         return new UserResponse(
                 user.getId(),
                 user.getUsername(),
@@ -96,5 +50,4 @@ public class UserService {
                 user.getCreatedAt()
         );
     }
-
 }
