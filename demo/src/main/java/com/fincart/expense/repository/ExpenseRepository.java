@@ -5,8 +5,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface ExpenseRepository
-        extends JpaRepository<Expense, Long> {
+import java.util.Optional;
+
+public interface ExpenseRepository extends JpaRepository<Expense, Long> {
+
+    Optional<Expense> findByIdAndUserId(Long expenseId, Long userId);
 
     Page<Expense> findByUserId(Long userId, Pageable pageable);
 
