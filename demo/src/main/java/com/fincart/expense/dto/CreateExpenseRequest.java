@@ -1,52 +1,26 @@
 package com.fincart.expense.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.*;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 
-public class CreateExpenseRequest {
-    @NotBlank
-    private String title;
-    @NotNull
-    @Positive
-    private Double amount;
-    @NotBlank
-    private String category;
-    private String description;
+public record CreateExpenseRequest(
+        @NotBlank
+        @Size(max = 120)
+        String title,
 
+        @NotNull
+        @DecimalMin("0.01")
+        @Digits(integer = 10, fraction = 2)
+        BigDecimal amount,
 
-    public @NotBlank String getTitle() {
-        return title;
-    }
+        @NotBlank
+        @Size(max = 40)
+        String category,
 
-    public void setTitle(@NotBlank String title) {
-        this.title = title;
-    }
+        @Size(max = 500)
+        String description,
 
-    public @NotNull @Positive Double getAmount() {
-        return amount;
-    }
-
-    public void setAmount(@NotNull @Positive Double amount) {
-        this.amount = amount;
-    }
-
-    public @NotBlank String getCategory() {
-        return category;
-    }
-
-    public void setCategory(@NotBlank String category) {
-        this.category = category;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-
-
-}
+        @NotNull
+        LocalDate expenseDate
+) {}
