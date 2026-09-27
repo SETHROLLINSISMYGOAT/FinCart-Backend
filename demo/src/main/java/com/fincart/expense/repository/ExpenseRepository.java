@@ -18,4 +18,5 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
             String category,
             Pageable pageable
     );
+
 }
